@@ -45,3 +45,16 @@ The bulk of the site is contained in a 150-line-long `script` tag. In short:
 ## Deployment
 
 The deployment of the website to the target S3 bucket `tracker-website` is automated with a [GitHub Actions](https://github.com/features/actions) CI/CD pipeline.
+
+## The Website Icons
+
+For the browser there's a [Favicon](https://www.w3schools.com/html/html_favicon.asp).
+
+For Android devices there's a [web app manifest that among other specifications points to different icons for different purposes](https://web.dev/articles/add-manifest):
+
+- `icon-192.png`
+- `icon-192-maskable.png`
+- `icon-512.png`
+- `icon-512-maskable.png`
+
+For Apple devices there's an [Apple Touch Icon](https://developer.chrome.com/docs/lighthouse/pwa/apple-touch-icon).

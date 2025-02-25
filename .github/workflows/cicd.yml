@@ -19,4 +19,15 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Deploy index.html and favicon.ico to S3
-        run: aws s3 sync . s3://tracker-website --exclude "*" --include "index.html" --include "favicon.ico" --cache-control max-age=1209600
+        run: |
+          aws s3 sync . s3://tracker-website \
+            --exclude "*" \
+            --include "index.html" \
+            --include "favicon.ico" \
+            --include "apple-touch-icon.png" \
+            --include "icon-192.png" \
+            --include "icon-512.png" \
+            --include "icon-192-maskable.png" \
+            --include "icon-512-maskable.png" \
+            --include "manifest.json" \
+            --cache-control max-age=1209600

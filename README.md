@@ -3,8 +3,10 @@
 This project contains the simple website that is part of the "Tracker" Android app's system architecture (see diagram in its repo's README.md).
 
 - the site uses the `locations.json` file as input
-- draws a map on the screen and a table with the locations below
+- draws a map on the screen (full-screen)
 - marks the measurements on the map
+  - adds popups with nicely formatted date and time information (your local time zone will be used)
+  - the most recent location is highlighted red
 
 ## This project's sample data
 
@@ -23,6 +25,23 @@ The [route is approximately this on Google Maps](https://www.google.de/maps/dir/
 - [Leaflet.js](https://leafletjs.com/) (open-source JavaScript library for mobile-friendly interactive maps)
   - OpenStreetMaps as map provider
 
-## CI/CD
+Both dependencies are included via CDN links, keeping it as simple as possible.
 
-[Explanation how code is put to AWS with Pipeline - automated deployment]
+The whole project is just a `index.html` file (and a `favicon.ico` image resource).
+
+## About the code
+
+The bulk of the site is contained in a 150-line-long `script` tag. In short:
+
+- `<div id="app">` is controlled by the Vue framework
+- `<div id="map"></div>` is controlled by the Leaflet.js library
+- in the big `script` there is
+  - first the Vue app being intialized with `createApp()` -> the main app component is created
+  - when it has been created and put into the DOM, the `mounted()` function is run
+    - [immediate, synchronous] `initMap()`: sets the map up
+    - [asynchronous] `loadLocations()`: fetches the data from `locations.json`, adds markers and
+      - uses the `formatDate()` method to display nice dates in the marker popups
+
+## Deployment
+
+The deployment of the website to the target S3 bucket `tracker-website` is automated with a [GitHub Actions](https://github.com/features/actions) CI/CD pipeline.

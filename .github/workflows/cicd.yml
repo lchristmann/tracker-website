@@ -1,0 +1,23 @@
+name: Deploy to AWS S3
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
+  AWS_DEFAULT_REGION: 'eu-central-1'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy index.html and favicon.ico to S3
+        run: |
+          aws s3 sync . s3://tracker-website --exclude "*" --include "index.html" --include "favicon.ico"

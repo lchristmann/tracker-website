@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tracker</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+      #map {
+        height: 100vh;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app">
+      <div id="map"></div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+      const { createApp } = Vue;
+
+      createApp({
+        data() {
+          return {
+            map: null,
+            markers: [],
+          };
+        },
+        mounted() {
+          this.initMap();
+          this.loadLocations();
+        },
+        methods: {
+          initMap() {
+            // Initialize the map with a temporary view (will update later)
+            this.map = L.map("map").setView([0, 0], 13);
+            // Add OpenStreetMap tiles
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+              attribution:
+                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            }).addTo(this.map);
+          },
+          // Formats the date according to the requirements:
+          // "Today, HH:mm", "Yesterday, HH:mm", or "Dienstag, 25.2., 17:45" (German for other days)
+          formatDate(date) {
+            const givenYear = date.getFullYear();
+            const givenMonth = date.getMonth();
+            const givenDay = date.getDate();
+            
+            const today = new Date();
+            const todayYear = today.getFullYear();
+            const todayMonth = today.getMonth();
+            const todayDay = today.getDate();
+
+            // Check if the date is today
+            if (
+              givenYear === todayYear &&
+              givenMonth === todayMonth &&
+              givenDay === todayDay
+            ) {
+              return `Today, ${date
+                .getHours()
+                .toString()
+                .padStart(2, "0")}:${date
+                .getMinutes()
+                .toString()
+                .padStart(2, "0")}`;
+            }
+
+            // Create a date for yesterday
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            if (
+              givenYear === yesterday.getFullYear() &&
+              givenMonth === yesterday.getMonth() &&
+              givenDay === yesterday.getDate()
+            ) {
+              return `Yesterday, ${date
+                .getHours()
+                .toString()
+                .padStart(2, "0")}:${date
+                .getMinutes()
+                .toString()
+                .padStart(2, "0")}`;
+            }
+
+            // For other days, format in German:
+            const weekdays = [
+              "Sonntag",
+              "Montag",
+              "Dienstag",
+              "Mittwoch",
+              "Donnerstag",
+              "Freitag",
+              "Samstag",
+            ];
+            const weekday = weekdays[date.getDay()];
+            const day = date.getDate();
+            const month = date.getMonth() + 1; // JS months are 0-indexed
+            const hours = date.getHours().toString().padStart(2, "0");
+            const minutes = date.getMinutes().toString().padStart(2, "0");
+
+            return `${weekday}, ${day}.${month}., ${hours}:${minutes}`;
+          },
+          async loadLocations() {
+            try {
+              const response = await fetch("locations.json");
+              const locations = await response.json();
+
+              // If there are locations, set the view to the last data point.
+              if (locations.length > 0) {
+                const lastLocation = locations[locations.length - 1];
+                this.map.setView(
+                  [lastLocation.latitude, lastLocation.longitude],
+                  10
+                );
+              }
+
+              // Define a custom red icon for the last marker
+              const redIcon = new L.Icon({
+                iconUrl:
+                  "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+                shadowUrl:
+                  "https://unpkg.com/leaflet/dist/images/marker-shadow.png",
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41],
+              });
+
+              locations.forEach((loc, index) => {
+                // Convert the timestamp to a number in milliseconds
+                const ts =
+                  loc.timestamp.length === 13
+                    ? Number(loc.timestamp)
+                    : Number(loc.timestamp) * 1000;
+                const date = new Date(ts);
+
+                // Format the date using the custom formatter
+                const formattedDate = this.formatDate(date);
+
+                // Create a marker at the given latitude and longitude
+                const marker = L.marker([loc.latitude, loc.longitude]).addTo(
+                  this.map
+                );
+
+                // Bind a popup to the marker with the formatted date and time, including the time zone
+                marker.bindPopup(`<b>${formattedDate}</b>`);
+
+                // For the last location, use the red icon and open its popup
+                if (index === locations.length - 1) {
+                  marker.setIcon(redIcon);
+                  marker.openPopup();
+                }
+
+                this.markers.push(marker);
+              });
+            } catch (err) {
+              console.error("Error loading locations:", err);
+            }
+          },
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
